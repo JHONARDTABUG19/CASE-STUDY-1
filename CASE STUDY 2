@@ -1,0 +1,220 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <ctype.h>
+#include <string.h>
+
+struct Node {
+    int data;
+    struct Node* next;
+};
+
+struct Node* head = NULL;
+int list_created = 0;
+
+void createLinkedList() {
+    int value;
+    char choice;
+    struct Node *newNode, *temp;
+    head = NULL;
+    do {
+        printf("Enter a number: ");
+        scanf("%d", &value);
+        newNode = (struct Node*)malloc(sizeof(struct Node));
+        newNode->data = value;
+        newNode->next = NULL;
+
+        if (head == NULL) {
+            head = newNode;
+        } else {
+            temp = head;
+            while (temp->next != NULL)
+                temp = temp->next;
+            temp->next = newNode;
+        }
+
+        printf("Add another node? (Y/N): ");
+        scanf(" %c", &choice);
+    } while (toupper(choice) == 'Y');
+    list_created = 1;
+}
+
+void displayLinkedList() {
+    if (!list_created) {
+        printf("Please create a linear linked list first!\n");
+        return;
+    }
+    struct Node* temp = head;
+    printf("\nLinked List: ");
+    while (temp != NULL) {
+        printf("%d -> ", temp->data);
+        temp = temp->next;
+    }
+    printf("NULL\n");
+}
+
+void sortLinkedList() {
+    if (!list_created) {
+        printf("Please create a linear linked list first!\n");
+        return;
+    }
+    struct Node *i, *j;
+    int temp;
+    for (i = head; i != NULL; i = i->next) {
+        for (j = i->next; j != NULL; j = j->next) {
+            if (i->data > j->data) {
+                temp = i->data;
+                i->data = j->data;
+                j->data = temp;
+            }
+        }
+    }
+    printf("Linked list sorted in ascending order.\n");
+}
+
+void searchNumber() {
+    if (!list_created) {
+        printf("Please create a linear linked list first!\n");
+        return;
+    }
+    char choice;
+    int num, found;
+    do {
+        found = 0;
+        printf("Enter number to search: ");
+        scanf("%d", &num);
+
+        struct Node* temp = head;
+        while (temp != NULL) {
+            if (temp->data == num) {
+                found = 1;
+                break;
+            }
+            temp = temp->next;
+        }
+
+        if (found)
+            printf("%d is in the list.\n", num);
+        else
+            printf("%d is not in the list.\n", num);
+
+        printf("Do you want to search another number? (Y/N): ");
+        scanf(" %c", &choice);
+    } while (toupper(choice) == 'Y');
+}
+
+void insertAtPosition(int value, int position) {
+    struct Node* newNode = (struct Node*) malloc(sizeof(struct Node));
+    newNode->data = value;
+    newNode->next = NULL;
+
+    if (position == 0) {
+        newNode->next = head;
+        head = newNode;
+        return;
+    }
+
+    struct Node* temp = head;
+    for (int i = 0; i < position - 1 && temp != NULL; i++) {
+        temp = temp->next;
+    }
+
+    if (temp == NULL) {
+        printf("Position out of bounds.\n");
+        free(newNode);
+        return;
+    }
+
+    newNode->next = temp->next;
+    temp->next = newNode;
+}
+
+void insertNodeMenu() {
+    if (!list_created) {
+        printf("Please create a linear linked list first!\n");
+        return;
+    }
+    int value, position;
+    printf("Enter value to insert: ");
+    scanf("%d", &value);
+    printf("Enter position to insert at (0 for head): ");
+    scanf("%d", &position);
+    insertAtPosition(value, position);
+    printf("Node inserted.\n");
+}
+
+void deleteEntireList() {
+    if (!list_created) {
+        printf("Please create a linear linked list first!\n");
+        return;
+    }
+    struct Node* temp;
+    while (head != NULL) {
+        temp = head;
+        head = head->next;
+        free(temp);
+    }
+    list_created = 0;
+    printf("Linked list cleared.\n");
+}
+
+void countNodes() {
+    if (!list_created) {
+        printf("Please create a linear linked list first!\n");
+        return;
+    }
+    int count = 0;
+    struct Node* temp = head;
+    while (temp != NULL) {
+        count++;
+        temp = temp->next;
+    }
+    printf("Total nodes in the list: %d\n", count);
+}
+
+int main() {
+    char choice;
+    do {
+        printf("\nMAIN MENU\n");
+        printf("a. Create a Linear Linked List\n");
+        printf("b. Display a Linear Linked List\n");
+        printf("c. Sort a Linear Linked List - Ascending\n");
+        printf("d. Search a number\n");
+        printf("e. Insert a node at a specific position\n");
+        printf("f. Count number of nodes\n");
+        printf("g. Delete/Clear the entire list\n");
+        printf("h. Exit\n");
+        printf("Enter choice: ");
+        scanf(" %c", &choice);
+
+        switch (tolower(choice)) {
+            case 'a':
+                createLinkedList();
+                break;
+            case 'b':
+                displayLinkedList();
+                break;
+            case 'c':
+                sortLinkedList();
+                break;
+            case 'd':
+                searchNumber();
+                break;
+            case 'e':
+                insertNodeMenu();
+                break;
+            case 'f':
+                countNodes();
+                break;
+            case 'g':
+                deleteEntireList();
+                break;
+            case 'h':
+                printf("Exiting program.\n");
+                break;
+            default:
+                printf("Invalid choice. Please try again.\n");
+        }
+    } while (tolower(choice) != 'h');
+
+    return 0;
+}
