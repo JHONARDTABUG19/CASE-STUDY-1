@@ -1,0 +1,313 @@
+FINAL
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <ctype.h> // for isdigit()
+
+#define MAX_NAME 30
+#define MAX_PROGRAM 5
+
+typedef struct Student {
+    char studentNumber[11];
+    char fullName[MAX_NAME + 1];
+    char gender;
+    char programCode[MAX_PROGRAM + 1];
+    int yearLevel;
+    int unitsEnrolled;
+    float prelimGrade, midtermGrade, finalExamGrade;
+    float finalGrade;
+    char academicStanding[15];
+    char remarks[10];
+    struct Student* next;
+} Student;
+
+Student* head = NULL;
+
+void computeGrades(Student* s) {
+    s->finalGrade = (s->prelimGrade + s->midtermGrade + s->finalExamGrade) / 3.0;
+    if (s->finalGrade >= 90)
+        strcpy(s->academicStanding, "Dean's Lister");
+    else if (s->finalGrade >= 75)
+        strcpy(s->academicStanding, "Regular");
+    else
+        strcpy(s->academicStanding, "Probation");
+
+    if (s->finalGrade >= 75)
+        strcpy(s->remarks, "Passed");
+    else
+        strcpy(s->remarks, "Failed");
+}
+
+int isAllDigits(const char* str) {
+    for (int i = 0; str[i]; i++)
+        if (!isdigit(str[i])) return 0;
+    return 1;
+}
+
+int isValidName(const char* name) {
+    for (int i = 0; name[i]; i++) {
+        if (!isalpha(name[i]) && name[i] != ' ') return 0;
+    }
+    return 1;
+}
+
+void enterStudent() {
+    Student* newStudent = (Student*)malloc(sizeof(Student));
+    int valid = 0;
+
+    printf("Enter Student Number (numbers only): ");
+    scanf("%10s", newStudent->studentNumber);
+    while (!isAllDigits(newStudent->studentNumber)) {
+        printf("Invalid input. Enter Student Number again: ");
+        scanf("%10s", newStudent->studentNumber);
+    }
+
+    printf("Enter Full Name (letters only): ");
+    getchar();
+    fgets(newStudent->fullName, MAX_NAME + 1, stdin);
+    newStudent->fullName[strcspn(newStudent->fullName, "\n")] = 0;
+    while (!isValidName(newStudent->fullName)) {
+        printf("Invalid input. Enter Full Name again: ");
+        fgets(newStudent->fullName, MAX_NAME + 1, stdin);
+        newStudent->fullName[strcspn(newStudent->fullName, "\n")] = 0;
+    }
+
+    printf("Enter Gender (M/F): ");
+    scanf(" %c", &newStudent->gender);
+    while (newStudent->gender != 'M' && newStudent->gender != 'F') {
+        printf("Invalid input. Enter Gender (M/F): ");
+        scanf(" %c", &newStudent->gender);
+    }
+
+    printf("Enter Program Code: ");
+    scanf("%5s", newStudent->programCode);
+
+    printf("Enter Year Level (1-4): ");
+    valid = scanf("%d", &newStudent->yearLevel);
+    while (!valid || newStudent->yearLevel < 1 || newStudent->yearLevel > 4) {
+        while (getchar() != '\n');
+        printf("Invalid input. Enter Year Level (1-4): ");
+        valid = scanf("%d", &newStudent->yearLevel);
+    }
+
+    printf("Enter Units Enrolled: ");
+    valid = scanf("%d", &newStudent->unitsEnrolled);
+    while (!valid || newStudent->unitsEnrolled <= 0) {
+        while (getchar() != '\n');
+        printf("Invalid input. Enter Units Enrolled: ");
+        valid = scanf("%d", &newStudent->unitsEnrolled);
+    }
+
+    printf("Enter Prelim Grade: ");
+    valid = scanf("%f", &newStudent->prelimGrade);
+    while (!valid || newStudent->prelimGrade < 0 || newStudent->prelimGrade > 100) {
+        while (getchar() != '\n');
+        printf("Invalid input. Enter Prelim Grade: ");
+        valid = scanf("%f", &newStudent->prelimGrade);
+    }
+
+    printf("Enter Midterm Grade: ");
+    valid = scanf("%f", &newStudent->midtermGrade);
+    while (!valid || newStudent->midtermGrade < 0 || newStudent->midtermGrade > 100) {
+        while (getchar() != '\n');
+        printf("Invalid input. Enter Midterm Grade: ");
+        valid = scanf("%f", &newStudent->midtermGrade);
+    }
+
+    printf("Enter Final Exam Grade: ");
+    valid = scanf("%f", &newStudent->finalExamGrade);
+    while (!valid || newStudent->finalExamGrade < 0 || newStudent->finalExamGrade > 100) {
+        while (getchar() != '\n');
+        printf("Invalid input. Enter Final Exam Grade: ");
+        valid = scanf("%f", &newStudent->finalExamGrade);
+    }
+
+    computeGrades(newStudent);
+    newStudent->next = head;
+    head = newStudent;
+
+    printf("Student added successfully.\n");
+}
+
+void displayAll() {
+    Student* temp = head;
+    printf("\n%-12s %-30s %-6s %-4s %-4s %-10s\n", "Student No", "Full Name", "Course", "Year", "Grade", "Remarks");
+    while (temp) {
+        printf("%-12s %-30s %-6s %-4d %-4.2f %-10s\n",
+               temp->studentNumber,
+               temp->fullName,
+               temp->programCode,
+               temp->yearLevel,
+               temp->finalGrade,
+               temp->remarks);
+        temp = temp->next;
+    }
+}
+
+void saveToTextFile() {
+    FILE* fp = fopen("D:\\Case\\students.txt", "w");
+    if (!fp) {
+        printf("Cannot write to text file.\n");
+        return;
+    }
+
+    fprintf(fp, "%*s\n", 40 + (int)(strlen("ABC UNIVERSITY") / 2), "ABC UNIVERSITY");
+    fprintf(fp, "%*s\n\n", 45 + (int)(strlen("Academic Records – AY 2024–2025") / 2), "Academic Records – AY 2024–2025");
+    fprintf(fp, "Student No.   Full Name                Course  Year  Final Grade  Remarks\n");
+
+    Student* temp = head;
+    while (temp) {
+        fprintf(fp, "%-13s %-23s %-7s %-5d %-12.2f %-s\n",
+                temp->studentNumber,
+                temp->fullName,
+                temp->programCode,
+                temp->yearLevel,
+                temp->finalGrade,
+                temp->remarks);
+        temp = temp->next;
+    }
+
+    fclose(fp);
+    printf("Records saved to text file.\n");
+}
+
+void saveToBinaryFile() {
+    FILE* fp = fopen("D:\\Case\\students.bin", "w");  // use .bin but write binary digits as text
+    if (!fp) {
+        printf("Cannot write to binary file.\n");
+        return;
+    }
+
+    Student* temp = head;
+    while (temp) {
+        unsigned char* bytes = (unsigned char*)temp;
+        for (size_t i = 0; i < sizeof(Student); i++) {
+            for (int b = 7; b >= 0; b--) {
+                fprintf(fp, "%d", (bytes[i] >> b) & 1);
+            }
+        }
+        fprintf(fp, "\n"); // new line per student
+        temp = temp->next;
+    }
+
+    fclose(fp);
+    printf("Binary representation saved to students.bin\n");
+}
+
+
+void saveAll() {
+    saveToTextFile();
+    saveToBinaryFile();
+}
+
+void loadFromFile() {
+    FILE* fp = fopen("D:\\Case\\students.txt", "r");
+    if (!fp) {
+        printf("No text file found.\n");
+        return;
+    }
+
+    char line[256];
+    int skipLines = 3;
+    while (skipLines--) fgets(line, sizeof(line), fp);
+
+    while (fgets(line, sizeof(line), fp)) {
+        Student* newStudent = (Student*)malloc(sizeof(Student));
+        sscanf(line, "%s %s %s %d %f %s",
+               newStudent->studentNumber,
+               newStudent->fullName,
+               newStudent->programCode,
+               &newStudent->yearLevel,
+               &newStudent->finalGrade,
+               newStudent->remarks);
+        strcpy(newStudent->academicStanding, "-"); // Placeholder
+        newStudent->next = head;
+        head = newStudent;
+    }
+
+    fclose(fp);
+    printf("Records loaded from text file.\n");
+}
+
+void sortByFinalGradeDesc() {
+    if (!head || !head->next) return;
+    Student *i, *j;
+    for (i = head; i != NULL; i = i->next) {
+        for (j = i->next; j != NULL; j = j->next) {
+            if (j->finalGrade > i->finalGrade) {
+                Student temp = *i;
+                *i = *j;
+                *j = temp;
+                Student* tmp = i->next;
+                i->next = j->next;
+                j->next = tmp;
+            }
+        }
+    }
+    printf("Students sorted by final grade (descending).\n");
+}
+
+void searchByStudentNumber() {
+    char id[11];
+    printf("Enter student number to search: ");
+    scanf("%s", id);
+
+    Student* temp = head;
+    while (temp) {
+        if (strcmp(temp->studentNumber, id) == 0) {
+            printf("\nRecord Found:\n");
+            printf("Name: %s\nGender: %c\nProgram: %s\nYear: %d\nFinal Grade: %.2f\nStanding: %s\nRemarks: %s\n",
+                   temp->fullName, temp->gender, temp->programCode, temp->yearLevel,
+                   temp->finalGrade, temp->academicStanding, temp->remarks);
+            return;
+        }
+        temp = temp->next;
+    }
+    printf("Student number not found.\n");
+}
+
+void mainMenu() {
+    char choice;
+    do {
+        printf("\n--- MAIN MENU ---\n");
+        printf("a. Enter new student records\n");
+        printf("b. Compute final grades and remarks\n");
+        printf("c. Display all student records\n");
+        printf("d. Sort students by final grade (Descending)\n");
+        printf("e. Search student by student number\n");
+        printf("f. Save records to file\n");
+        printf("g. Load records from file\n");
+        printf("h. Exit\n");
+        printf("Select an option: ");
+        scanf(" %c", &choice);
+
+        switch (choice) {
+            case 'a': enterStudent(); break;
+            case 'b': {
+                Student* temp = head;
+                while (temp) {
+                    computeGrades(temp);
+                    temp = temp->next;
+                }
+                printf("Grades computed for all students.\n");
+                break;
+            }
+            case 'c': displayAll(); break;
+            case 'd': sortByFinalGradeDesc(); break;
+            case 'e': searchByStudentNumber(); break;
+            case 'f': saveAll(); break;
+            case 'g': loadFromFile(); break;
+            case 'h': printf("Exiting...\n"); break;
+            default: printf("Invalid choice. Try again.\n");
+        }
+    } while (choice != 'h');
+}
+
+int main() {
+    mainMenu();
+    return 0;
+}
+
+
+
