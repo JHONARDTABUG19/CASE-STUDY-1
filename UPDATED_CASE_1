@@ -1,102 +1,104 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <ctype.h> // for toupper()
+#include <stdio.h>   // For standard input/output functions (e.g., printf, scanf, fopen, fprintf)
+#include <stdlib.h>  // For general utilities like exit codes or dynamic memory (not used directly here, but good practice)
+#include <string.h>  // For string operations like strcpy, strlen, strchr, strcspn
 
+// Define a structure to store employee details
 typedef struct Employee {
-    char Employee_Number[11];
-    char Employee_Name[16];
-    char status_code;
-    int hours_worked;
-    float monthly_salary;
-    float hourly_rate;
-    float overtime_pay;
-    float deductions;
-    float net_pay;
+    char Employee_Number[11];     // Employee ID (max 10 characters + null terminator)
+    char Employee_Name[16];       // Employee name (max 15 characters + null terminator)
+    char status_code;             // 'R' for Regular, 'C' for Casual
+    int hours_worked;             // Total hours worked for the month
+    float monthly_salary;         // Basic monthly salary
+    float hourly_rate;            // Computed hourly rate
+    float overtime_pay;           // Computed overtime pay
+    float deductions;             // Monthly deductions
+    float net_pay;                // Final computed net pay
 } Employee;
 
 int main() {
-    Employee emp[5];
+    Employee emp[5];              // Array to store data of 5 employees
     FILE *fp;
     int i;
-    const int n = 5;  // Fixed to 5 employees
+    const int n = 5;              // Fixed number of employees
 
     printf("You will input data for 5 employees.\n");
 
     for (i = 0; i < n; i++) {
         printf("\nEnter Employee %d Details:\n", i + 1);
 
-        // Employee number
+        // Get employee number (max 10 characters)
         printf("Employee Number (10 chars): ");
         scanf("%10s", emp[i].Employee_Number);
-        while (getchar() != '\n'); // flush buffer
+        while (getchar() != '\n'); // Clear input buffer
 
-        // Employee name
+        // Get employee name safely using fgets
         while (1) {
             printf("Employee Name (15 chars max): ");
             fgets(emp[i].Employee_Name, sizeof(emp[i].Employee_Name), stdin);
+
+            // Remove newline if present; otherwise flush remaining input
             if (strchr(emp[i].Employee_Name, '\n') == NULL) {
                 while (getchar() != '\n');
             } else {
                 emp[i].Employee_Name[strcspn(emp[i].Employee_Name, "\n")] = '\0';
             }
 
+            // Check if name is not empty
             if (strlen(emp[i].Employee_Name) > 0)
                 break;
             printf("Invalid name. Please try again.\n");
         }
 
-        // Status code
+        // Validate status code (R/r or C/c only)
         while (1) {
-        printf("Status Code (R for Regular, C for Casual): ");
-        scanf(" %c", &emp[i].status_code);
+            printf("Status Code (R for Regular, C for Casual): ");
+            scanf(" %c", &emp[i].status_code);
 
-        if (emp[i].status_code == 'R' || emp[i].status_code == 'r' ||
-        emp[i].status_code == 'C' || emp[i].status_code == 'c') {   
-            while (getchar() != '\n'); 
-        break;
-        } else {
-        printf("Invalid status code. Please enter R or C only.\n");
-        while (getchar() != '\n'); // Clear extra input (e.g., "abc\n")
+            // Check if valid, then flush input
+            if (emp[i].status_code == 'R' || emp[i].status_code == 'r' ||
+                emp[i].status_code == 'C' || emp[i].status_code == 'c') {
+                while (getchar() != '\n'); // Flush remaining input
+                break;
+            } else {
+                printf("Invalid status code. Please enter R or C only.\n");
+                while (getchar() != '\n'); // Flush wrong input
+            }
         }
-        
-    }
 
-
-        // Hours worked
+        // Validate hours worked
         while (1) {
             printf("Total Hours Worked This Month: ");
             if (scanf("%d", &emp[i].hours_worked) != 1 || emp[i].hours_worked < 0) {
                 printf("Invalid input. Please enter a non-negative number.\n");
-                while (getchar() != '\n');
+                while (getchar() != '\n'); // Flush input
             } else {
                 break;
             }
         }
 
-        // Monthly salary
+        // Validate monthly salary
         while (1) {
             printf("Basic Salary (Monthly): ");
             if (scanf("%f", &emp[i].monthly_salary) != 1 || emp[i].monthly_salary < 0) {
                 printf("Invalid input. Salary cannot be negative. Please try again.\n");
-                while (getchar() != '\n');
+                while (getchar() != '\n'); // Flush input
             } else {
                 break;
             }
         }
 
-        // Deductions
+        // Validate deductions
         while (1) {
             printf("Total Monthly Deductions: ");
             if (scanf("%f", &emp[i].deductions) != 1 || emp[i].deductions < 0) {
                 printf("Invalid input. Deductions cannot be negative. Please try again.\n");
-                while (getchar() != '\n');
+                while (getchar() != '\n'); // Flush input
             } else {
                 break;
             }
         }
 
-        // Calculations
+        // Compute hourly rate and overtime
         emp[i].hourly_rate = emp[i].monthly_salary / 160.0;
         if (emp[i].hours_worked > 160) {
             int overtime = emp[i].hours_worked - 160;
@@ -105,17 +107,18 @@ int main() {
             emp[i].overtime_pay = 0;
         }
 
+        // Compute net pay
         emp[i].net_pay = emp[i].monthly_salary + emp[i].overtime_pay - emp[i].deductions;
     }
 
-    // Open file in write mode (overwrites existing content)
+    // Open text file in write mode ("w" = overwrite)
     fp = fopen("TOTAL_EMPLOYEES.txt", "w");
     if (fp == NULL) {
         printf("Error opening file!\n");
         return 1;
     }
 
-    // Write header
+    // Write file header
     fprintf(fp, "                            ORIGINAL WEND'S CORPORATION\n");
     fprintf(fp, "                                QUEZON \n");
     fprintf(fp, "                                 City\n\n");
@@ -124,16 +127,19 @@ int main() {
     fprintf(fp, "Number       Name                       Salary       Pay                 Pay\n");
     fprintf(fp, "-------------------------------------------------------------------------------\n");
 
-    // Write employee data
+    // Write all employee data to the file
     for (i = 0; i < n; i++) {
         char statusStr[10];
-        if (emp[i].status_code == 'R')
+
+        // Map status code to full word
+        if (emp[i].status_code == 'R' || emp[i].status_code == 'r')
             strcpy(statusStr, "Regular");
-        else if (emp[i].status_code == 'C')
+        else if (emp[i].status_code == 'C' || emp[i].status_code == 'c')
             strcpy(statusStr, "Casual");
         else
             strcpy(statusStr, "Undecided");
 
+        // Format and write employee record
         fprintf(fp, "%-12s %-16s %-8s %9.2f %10.2f %11.2f %9.2f\n",
                 emp[i].Employee_Number,
                 emp[i].Employee_Name,
@@ -144,7 +150,7 @@ int main() {
                 emp[i].net_pay);
     }
 
-    fclose(fp);
+    fclose(fp); // Close file after writing
     printf("\nPayroll written to TOTAL_EMPLOYEES.txt successfully.\n");
 
     return 0;
