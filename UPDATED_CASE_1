@@ -1,108 +1,112 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <ctype.h> // for toupper()
+#include <stdio.h>      // For standard input/output functions
+#include <stdlib.h>     // For general utility functions
+#include <string.h>     // For string handling functions
+#include <ctype.h>      // For character functions like toupper()
 
+// Define a structure to store employee data
 typedef struct Employee {
-    char Employee_Number[11];
-    char Employee_Name[16];
-    char status_code;
-    int hours_worked;
-    float monthly_salary;
-    float hourly_rate;
-    float overtime_pay;
-    float deductions;
-    float net_pay;
+    char Employee_Number[11];   // Employee ID (max 10 characters + null terminator)
+    char Employee_Name[16];     // Employee full name (max 15 characters + null terminator)
+    char status_code;           // Status: 'R' = Regular, 'C' = Casual
+    int hours_worked;           // Total number of hours worked for the month
+    float monthly_salary;       // Base monthly salary
+    float hourly_rate;          // Derived hourly rate (monthly_salary / 160)
+    float overtime_pay;         // Pay for hours worked beyond 160
+    float deductions;           // Deductions (e.g., tax, SSS, etc.)
+    float net_pay;              // Final pay = base + overtime - deductions
 } Employee;
 
 int main() {
-    Employee emp[5];
-    FILE *fp;
-    int i, n;
+    Employee emp[5];    // Declare an array of 5 employee records
+    FILE *fp;           // File pointer for writing payroll data
+    int i, n;           // Loop counter and number of employees
 
-    // Get number of employees with validation
+    // Input: Number of employees with input validation
     while (1) {
         printf("How many employees do you want to input? (max 5): ");
         if (scanf("%d", &n) != 1) {
             printf("Invalid input. Please enter a number.\n");
-            while (getchar() != '\n');
+            while (getchar() != '\n'); // Clear input buffer
             continue;
         }
         if (n < 1 || n > 5) {
             printf("Error: You can only input 1 to 5 employees.\n");
             continue;
         }
-        break;
+        break; // Exit loop on valid input
     }
 
+    // Loop through each employee to gather and compute their data
     for (i = 0; i < n; i++) {
         printf("\nEnter Employee %d Details:\n", i + 1);
 
-        // Employee number
+        // Input: Employee Number (max 10 characters)
         printf("Employee Number (10 chars): ");
         scanf("%10s", emp[i].Employee_Number);
-        while (getchar() != '\n'); // flush buffer
+        while (getchar() != '\n'); // Flush leftover newline from buffer
 
-        // Employee name with buffer clearing
+        // Input: Employee Name with validation and buffer clearing
         while (1) {
             printf("Employee Name (15 chars max): ");
             fgets(emp[i].Employee_Name, sizeof(emp[i].Employee_Name), stdin);
             if (strchr(emp[i].Employee_Name, '\n') == NULL) {
-                while (getchar() != '\n'); // flush overflow
+                while (getchar() != '\n'); // Flush any remaining input
             } else {
-                emp[i].Employee_Name[strcspn(emp[i].Employee_Name, "\n")] = '\0';
+                emp[i].Employee_Name[strcspn(emp[i].Employee_Name, "\n")] = '\0'; // Remove newline
             }
 
             if (strlen(emp[i].Employee_Name) > 0)
-                break;
+                break; // Valid name
             printf("Invalid name. Please try again.\n");
         }
 
-        // Status code validation
+        // Input: Status Code (R or C only)
         while (1) {
             printf("Status Code (R for Regular, C for Casual): ");
             scanf(" %c", &emp[i].status_code);
-            emp[i].status_code = toupper(emp[i].status_code);
+            emp[i].status_code = toupper(emp[i].status_code); // Convert to uppercase
             if (emp[i].status_code == 'R' || emp[i].status_code == 'C')
-                break;
+                break; // Valid status
             printf("Invalid status code. Please enter R or C only.\n");
         }
 
-        // Hours worked validation
+        // Input: Total Hours Worked (must be non-negative)
         while (1) {
             printf("Total Hours Worked This Month: ");
             if (scanf("%d", &emp[i].hours_worked) != 1 || emp[i].hours_worked < 0) {
                 printf("Invalid input. Please enter a non-negative number.\n");
-                while (getchar() != '\n');
+                while (getchar() != '\n'); // Flush invalid input
             } else {
                 break;
             }
         }
 
-        // Monthly salary validation
+        // Input: Monthly Salary (must be non-negative)
         while (1) {
             printf("Basic Salary (Monthly): ");
             if (scanf("%f", &emp[i].monthly_salary) != 1 || emp[i].monthly_salary < 0) {
                 printf("Invalid input. Salary cannot be negative. Please try again.\n");
-                while (getchar() != '\n');
+                while (getchar() != '\n'); // Flush
             } else {
                 break;
             }
         }
 
-        // Deductions validation
+        // Input: Deductions (must be non-negative)
         while (1) {
             printf("Total Monthly Deductions: ");
             if (scanf("%f", &emp[i].deductions) != 1 || emp[i].deductions < 0) {
                 printf("Invalid input. Deductions cannot be negative. Please try again.\n");
-                while (getchar() != '\n');
+                while (getchar() != '\n'); // Flush
             } else {
                 break;
             }
         }
 
-        // Calculate derived values
+        // Computation: Calculate hourly rate
         emp[i].hourly_rate = emp[i].monthly_salary / 160.0;
+
+        // Computation: Calculate overtime pay if applicable
         if (emp[i].hours_worked > 160) {
             int overtime = emp[i].hours_worked - 160;
             emp[i].overtime_pay = overtime * (emp[i].hourly_rate * 1.5f);
@@ -110,47 +114,17 @@ int main() {
             emp[i].overtime_pay = 0;
         }
 
+        // Computation: Calculate net pay
         emp[i].net_pay = emp[i].monthly_salary + emp[i].overtime_pay - emp[i].deductions;
     }
 
-    // Open file for appending
+    // File Handling: Open file to append data
     fp = fopen("TOTAL_EMPLOYEES.txt", "a");
     if (fp == NULL) {
         printf("Error opening file!\n");
         return 1;
     }
 
-    // Write header
+    // Output: Write report header to file
     fprintf(fp, "                            ORIGINAL WEND'S CORPORATION\n");
-    fprintf(fp, "                                QUEZON \n");
-    fprintf(fp, "                                 City\n\n");
-    fprintf(fp, "                                Payroll\n\n");
-    fprintf(fp, "Employee     Employee         Status    Basic     Overtime  Deductions   Net\n");
-    fprintf(fp, "Number       Name                       Salary       Pay                 Pay\n");
-    fprintf(fp, "-------------------------------------------------------------------------------\n");
-
-    // Write employee data
-    for (i = 0; i < n; i++) {
-        char statusStr[10];
-        if (emp[i].status_code == 'R')
-            strcpy(statusStr, "Regular");
-        else if (emp[i].status_code == 'C')
-            strcpy(statusStr, "Casual");
-        else
-            strcpy(statusStr, "Undecided");
-
-        fprintf(fp, "%-12s %-16s %-8s %9.2f %10.2f %11.2f %9.2f\n",
-                emp[i].Employee_Number,
-                emp[i].Employee_Name,
-                statusStr,
-                emp[i].monthly_salary,
-                emp[i].overtime_pay,
-                emp[i].deductions,
-                emp[i].net_pay);
-    }
-
-    fclose(fp);
-    printf("\nPayroll written to TOTAL_EMPLOYEES.txt successfully.\n");
-
-    return 0;
-}
+    fprintf(fp, "                                QUEZO
