@@ -1,66 +1,69 @@
-#include  <stdio.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
 typedef struct Employee {
-    char empNumber[11];  // 10 characters + null terminator
-    char empName[16];    // 15 characters + null terminator
+    char Employee_Number[11];  // 10 characters + null terminator
+    char Employee_Name[16];    // 15 characters + null terminator
     char statusCode;     // R or C
     int hoursWorked;
-    float basicRate;
-    float basicPay;
+    float monthlySalary; // new: monthly salary input
+    float hourlyRate;    // derived
     float overtimePay;
     float deductions;
     float netPay;
 } Employee;
 
 int main() {
-
     Employee emp[5];
-    FILE *fp;  // Write to text file with formatted layout
+    FILE *fp;
     int i;
-    
 
-    // Input 5 employees
     for (i = 0; i < 5; i++) {
-        printf("Enter Employee %d Details:\n", i + 1);
+        printf("\nEnter Employee %d Details:\n", i + 1);
 
         printf("Employee Number (10 chars): ");
-        scanf("%s", emp[i].empNumber);
+        scanf("%s", emp[i].Employee_Number);
 
         printf("Employee Name (15 chars max): ");
-        scanf(" %s[^\n]", emp[i].empName);  // allows spaces in name
+        fgets(emp[i].Employee_Name, sizeof(emp[i].Employee_Name), stdin);
+        emp[i].Employee_Name[strcspn(emp[i].Employee_Name, "\n")] = '\0';  // Remove newline character
 
-        printf("Status Code (R/C): ");
+        printf("Status Code: Regular or Casual; please type letter R or C: ");
         scanf(" %c", &emp[i].statusCode);
 
         printf("Total Hours Worked This Month: ");
         scanf("%d", &emp[i].hoursWorked);
 
-        printf("Basic Rate (per hour): ");
-        scanf("%f", &emp[i].basicRate);
+        printf("Basic Salary (Monthly): ");
+        scanf("%f", &emp[i].monthlySalary);
 
         printf("Total Monthly Deductions (e.g., tax, SSS, etc.): ");
         scanf("%f", &emp[i].deductions);
 
+        // Derive hourly rate from monthly salary assuming 160 hours/month
+        emp[i].hourlyRate = emp[i].monthlySalary / 160;
 
-        emp[i].basicPay = 160 * emp[i].basicRate;
-
+        // Calculate overtime pay
         if (emp[i].hoursWorked > 160) {
             int overtime = emp[i].hoursWorked - 160;
-            emp[i].overtimePay = overtime * (emp[i].basicRate * 1.5);
+            emp[i].overtimePay = overtime * (emp[i].hourlyRate * 1.5);
         } else {
             emp[i].overtimePay = 0;
         }
 
-        emp[i].netPay = emp[i].basicPay + emp[i].overtimePay - emp[i].deductions;
+        // Net pay = monthly salary + overtime - deductions
+        emp[i].netPay = emp[i].monthlySalary + emp[i].overtimePay - emp[i].deductions;
     }
-fp = fopen("employees.txt", "w");
+
+    fp = fopen("employees27.txt", "w");
+
     if (fp == NULL) {
         printf("Error opening file!\n");
         return 1;
     }
-    fprintf(fp, "                               ORIGINAL WEND'S CORPORATION\n");
+
+    fprintf(fp, "                            ORIGINAL WEND'S CORPORATION\n");
     fprintf(fp, "                                QUEZON \n");
     fprintf(fp, "                                 City\n\n");
     fprintf(fp, "                                Payroll\n\n");
@@ -71,28 +74,29 @@ fp = fopen("employees.txt", "w");
 
     for (i = 0; i < 5; i++) {
         char statusStr[10];
+
         if (emp[i].statusCode == 'R' || emp[i].statusCode == 'r') {
             strcpy(statusStr, "Regular");
         } else if (emp[i].statusCode == 'C' || emp[i].statusCode == 'c') {
             strcpy(statusStr, "Casual");
         } else {
-            strcpy(statusStr, "Unknown");
+            strcpy(statusStr, "Undecided");
         }
 
         fprintf(fp, "%-12s %-16s %-8s %9.2f %10.2f %11.2f %9.2f\n",
-                emp[i].empNumber,
-                emp[i].empName,
+                emp[i].Employee_Number,
+                emp[i].Employee_Name,
                 statusStr,
-                emp[i].basicPay,
+                emp[i].monthlySalary,
                 emp[i].overtimePay,
                 emp[i].deductions,
                 emp[i].netPay);
     }
 
-
     fclose(fp);
 
-    printf("Payroll written to employees.txt successfully.\n");
+    printf("\nPayroll written to employees.txt successfully.\n");
 
     return 0;
 }
+
