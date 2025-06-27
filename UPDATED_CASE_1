@@ -1,7 +1,7 @@
 #include <stdio.h>   // For standard input/output functions like printf, scanf, fopen, fprintf)
 #include <stdlib.h>  // For malloc, free, etc
 #include <string.h>  // For string operations like strcpy, strlen, strchr, strcspn
-#include <ctype.h> // Required for isalpha()
+#include <ctype.h>   // Required for isalpha(), isdigit()
 
 // Define a structure to store employee details
 typedef struct Employee {
@@ -27,41 +27,74 @@ int main() {
     for (i = 0; i < n; i++) {
         printf("\nEnter Employee %d Details:\n", i + 1);
 
-        // Get employee number (max 10 characters)
-        printf("Employee Number (10 chars): ");
-        scanf("%10s", emp[i].Employee_Number);
-        while (getchar() != '\n'); // Clear input buffer
+        // Get employee number (max 10 characters) and validate for digits only
+        while (1) {
+
+            char temp_employee_number[100]; // Use a larger buffer for input to prevent overflow issues with scanf
+            printf("Employee Number (10 chars, digits only): ");
+            scanf("%99s", temp_employee_number); // Read as string, limit to 99 chars to leave space for null terminator
+
+            // Clear input buffer
+            while (getchar() != '\n');
+
+            int if_is_numeric = 1; // Flag to check if the input is purely numeric
+            if (strlen(temp_employee_number) == 0) {
+                if_is_numeric = 0; // Empty string is not valid
+            } else {
+                for (int j = 0; temp_employee_number[j] != '\0'; j++) {
+                    if (!isdigit(temp_employee_number[j])) {
+                        if_is_numeric = 0; // Found a non-digit character
+                        break;
+                    }
+                }
+            }
+
+            // Check if the length exceeds 10 characters after validation
+            if (strlen(temp_employee_number) > 10) {
+                printf("Employee Number exceeds 10 characters. Please enter up to 10 digits.\n");
+                if_is_numeric = 0; // Mark as invalid if too long
+            }
+
+
+            if (if_is_numeric) {
+                strcpy(emp[i].Employee_Number, temp_employee_number); // Copy valid input
+                break; // Exit the loop if valid
+            } else {
+                printf("Invalid Employee Number. Please enter digits only (up to 10 characters).\n");
+            }
+        }
+
 
         // Get employee name safely using fgets
         while (1) {
-    printf("Employee Name (15 chars max, letters only): ");
-    fgets(emp[i].Employee_Name, sizeof(emp[i].Employee_Name), stdin);
+            printf("Employee Name (15 chars max, letters only): ");
+            fgets(emp[i].Employee_Name, sizeof(emp[i].Employee_Name), stdin);
 
-    // Remove newline if present; otherwise flush remaining input
-    if (strchr(emp[i].Employee_Name, '\n') == NULL) {
-        while (getchar() != '\n');
-    } else {
-        emp[i].Employee_Name[strcspn(emp[i].Employee_Name, "\n")] = '\0';
-    }
-
-    // Check if ALL characters are letters AND the name is not empty
-    int validity_of_name = 1; // Flag to indicate if the name is valid
-    if (strlen(emp[i].Employee_Name) == 0) { // Check for empty string first
-        validity_of_name = 0;
-    } else {
-        for (int j = 0; emp[i].Employee_Name[j] != '\0'; j++) {
-            if (!isalpha(emp[i].Employee_Name[j])) { // If *not* a letter
-                validity_of_name = 0; // Mark as invalid
-                break;           // No need to check further
+            // Remove newline if present; otherwise flush remaining input
+            if (strchr(emp[i].Employee_Name, '\n') == NULL) {
+                while (getchar() != '\n');
+            } else {
+                emp[i].Employee_Name[strcspn(emp[i].Employee_Name, "\n")] = '\0';
             }
-        }
-    }
 
-    if (validity_of_name) {
-        break; // Exit the loop if the name is valid
-    }
-    printf("Invalid name. Please enter a name that contains ONLY letters (no numbers, spaces, or special characters).\n");
-}
+            // Check if ALL characters are letters AND the name is not empty
+            int validity_of_name = 1; // Flag to indicate if the name is valid
+            if (strlen(emp[i].Employee_Name) == 0) { // Check for empty string first
+                validity_of_name = 0;
+            } else {
+                for (int j = 0; emp[i].Employee_Name[j] != '\0'; j++) {
+                    if (!isalpha(emp[i].Employee_Name[j])) { // If *not* a letter
+                        validity_of_name = 0; // Mark as invalid
+                        break;           // No need to check further
+                    }
+                }
+            }
+
+            if (validity_of_name) {
+                break; // Exit the loop if the name is valid
+            }
+            printf("Invalid name. Please enter a name that contains ONLY letters (no numbers, spaces, or special characters).\n");
+        }
 
 
         // Validate status code (R/r or C/c only)
@@ -127,7 +160,7 @@ int main() {
     }
 
     // Open text file in write mode ("w" = overwrite)
-    fp = fopen("FINALLYY.txt", "w");
+    fp = fopen("FINALLYY.txt", "w"); // Changed to FINALLYY.txt as per original code
     if (fp == NULL) {
         printf("Error opening file!\n");
         return 1;
@@ -152,7 +185,7 @@ int main() {
         else if (emp[i].status_code == 'C' || emp[i].status_code == 'c')
             strcpy(statusStr, "Casual");
         else
-            strcpy(statusStr, "Undecided");
+            strcpy(statusStr, "Undecided"); // Fallback for unexpected status code
 
         // Format and write employee record
         fprintf(fp, "%-12s %-16s %-8s %9.2f %10.2f %11.2f %9.2f\n",
@@ -166,7 +199,7 @@ int main() {
     }
 
     fclose(fp); // Close file after writing
-    printf("\nPayroll written to TOTAL_EMPLOYEES.txt successfully.\n");
+    printf("\nPayroll written to FINALLYY.txt successfully.\n"); // Changed to FINALLYY.txt
 
     return 0;
 }
