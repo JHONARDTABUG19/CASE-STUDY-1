@@ -1,6 +1,7 @@
-#include <stdio.h>   // For standard input/output functions (e.g., printf, scanf, fopen, fprintf)
-#include <stdlib.h>  // For general utilities like exit codes or dynamic memory (not used directly here, but good practice)
+#include <stdio.h>   // For standard input/output functions like printf, scanf, fopen, fprintf)
+#include <stdlib.h>  // For malloc, free, etc
 #include <string.h>  // For string operations like strcpy, strlen, strchr, strcspn
+#include <ctype.h> // Required for isalpha()
 
 // Define a structure to store employee details
 typedef struct Employee {
@@ -33,21 +34,35 @@ int main() {
 
         // Get employee name safely using fgets
         while (1) {
-            printf("Employee Name (15 chars max): ");
-            fgets(emp[i].Employee_Name, sizeof(emp[i].Employee_Name), stdin);
+    printf("Employee Name (15 chars max, letters only): ");
+    fgets(emp[i].Employee_Name, sizeof(emp[i].Employee_Name), stdin);
 
-            // Remove newline if present; otherwise flush remaining input
-            if (strchr(emp[i].Employee_Name, '\n') == NULL) {
-                while (getchar() != '\n');
-            } else {
-                emp[i].Employee_Name[strcspn(emp[i].Employee_Name, "\n")] = '\0';
+    // Remove newline if present; otherwise flush remaining input
+    if (strchr(emp[i].Employee_Name, '\n') == NULL) {
+        while (getchar() != '\n');
+    } else {
+        emp[i].Employee_Name[strcspn(emp[i].Employee_Name, "\n")] = '\0';
+    }
+
+    // Check if ALL characters are letters AND the name is not empty
+    int validity_of_name = 1; // Flag to indicate if the name is valid
+    if (strlen(emp[i].Employee_Name) == 0) { // Check for empty string first
+        validity_of_name = 0;
+    } else {
+        for (int j = 0; emp[i].Employee_Name[j] != '\0'; j++) {
+            if (!isalpha(emp[i].Employee_Name[j])) { // If *not* a letter
+                validity_of_name = 0; // Mark as invalid
+                break;           // No need to check further
             }
-
-            // Check if name is not empty
-            if (strlen(emp[i].Employee_Name) > 0)
-                break;
-            printf("Invalid name. Please try again.\n");
         }
+    }
+
+    if (validity_of_name) {
+        break; // Exit the loop if the name is valid
+    }
+    printf("Invalid name. Please enter a name that contains ONLY letters (no numbers, spaces, or special characters).\n");
+}
+
 
         // Validate status code (R/r or C/c only)
         while (1) {
@@ -112,7 +127,7 @@ int main() {
     }
 
     // Open text file in write mode ("w" = overwrite)
-    fp = fopen("TOTAL_EMPLOYEES.txt", "w");
+    fp = fopen("FINALLYY.txt", "w");
     if (fp == NULL) {
         printf("Error opening file!\n");
         return 1;
